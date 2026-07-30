@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import Nav from '../components/Nav.jsx'
+import EventPopup from '../components/EventPopup.jsx'
 
 const bento = [
   { id: 1, name: '원피스 루피 기어5 스케일 피규어', brand: 'Banpresto', price: 42000, tag: '마감임박', large: true },
@@ -18,6 +19,7 @@ const picks = [
 export default function Home() {
   return (
     <div className="page-wrap">
+      <EventPopup />
       <Nav showCreate showCategories={false} />
 
       <div className="hero">
