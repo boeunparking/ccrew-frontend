@@ -72,11 +72,19 @@ a {
   padding: 22px 24px;
 }
 .logo {
+  display: inline-flex;
+  align-items: center;
   font-family: var(--serif);
   font-weight: 700;
   font-size: 22px;
   letter-spacing: 0.08em;
   color: var(--brand-navy);
+}
+.logo-mark {
+  display: block;
+  width: 70px;
+  height: 70px;
+  margin-right: 8px;
 }
 .navright {
   display: flex;
