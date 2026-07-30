@@ -16,6 +16,7 @@ export default function Nav({ showCreate = false, showCategories = true }) {
   return (
     <>
       <div className="util-bar">
+        <h1>하이루</h1>
         <Link to="/mypage">마이페이지</Link>
         <Link to="/login">로그인</Link>
         <Link to="/signup">회원가입</Link>
