@@ -3,12 +3,12 @@ import { Link } from 'react-router-dom'
 import Nav from '../components/Nav.jsx'
 
 const allAuctions = [
-  { id: 1, name: '빈티지 필름 카메라', brand: 'Leica Type', price: 42000, badge: '3분 남음' },
-  { id: 2, name: '한정판 스니커즈', brand: 'Rare Drop', price: 128000, badge: '12분 남음' },
-  { id: 3, name: '디자이너 시계', brand: 'Atelier', price: 310000, badge: '40분 남음' },
-  { id: 4, name: '아날로그 턴테이블', brand: 'Studio Sound', price: 95000, badge: '1시간 남음' },
-  { id: 5, name: '수제 가죽가방', brand: 'Craft House', price: 76000, badge: '2시간 남음' },
-  { id: 6, name: '무선 이어폰', brand: 'Sound Lab', price: 28000, badge: '3시간 남음' },
+  { id: 1, name: '원피스 루피 기어5 스케일 피규어', brand: 'Banpresto', price: 42000, badge: '3분 남음' },
+  { id: 2, name: '귀멸의칼날 넨도로이드 네즈코', brand: 'Good Smile Company', price: 68000, badge: '12분 남음' },
+  { id: 3, name: '에반게리온 초합금 로봇혼', brand: 'Bandai Spirits', price: 155000, badge: '40분 남음' },
+  { id: 4, name: '건담 RX-78-2 PG 프라모델', brand: 'Bandai', price: 89000, badge: '1시간 남음' },
+  { id: 5, name: '명일방주 텍사스 스케일 피규어', brand: 'Myethos', price: 132000, badge: '2시간 남음' },
+  { id: 6, name: '스파이 패밀리 아냐 넨도로이드', brand: 'Good Smile Company', price: 54000, badge: '3시간 남음' },
 ]
 
 const filters = ['진행중', '마감임박', '종료']

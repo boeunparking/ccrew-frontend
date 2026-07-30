@@ -10,9 +10,9 @@ function formatTime(sec) {
 }
 
 const related = [
-  { id: 11, name: '올드 폴라로이드', brand: 'Instant Co', price: 31000 },
-  { id: 12, name: '레더 카메라 스트랩', brand: 'Craft House', price: 18000 },
-  { id: 13, name: '빈티지 삼각대', brand: 'Studio Sound', price: 24000 },
+  { id: 11, name: '루피 기어5 아크릴 스탠드', brand: 'SK Japan', price: 8000 },
+  { id: 12, name: '원피스 피규어 디스플레이 케이스', brand: 'Craft Case', price: 15000 },
+  { id: 13, name: '기어5 응원봉 굿즈', brand: 'Toei Animation Goods', price: 12000 },
 ]
 
 export default function AuctionDetail() {
@@ -76,8 +76,8 @@ export default function AuctionDetail() {
         </div>
 
         <div className="detail-right">
-          <div className="detail-brand">Leica Type · 경매 #{id}</div>
-          <div className="detail-title">빈티지 필름 카메라</div>
+          <div className="detail-brand">Banpresto · 경매 #{id}</div>
+          <div className="detail-title">원피스 루피 기어5 스케일 피규어</div>
 
           <div className="social-proof"><b>{bidderCount}명</b>이 입찰에 참여하고 있어요</div>
 
@@ -128,8 +128,8 @@ export default function AuctionDetail() {
           </div>
 
           <div className="desc">
-            <div style={{ fontWeight: 700, marginBottom: 6, color: 'var(--black)' }}>판매자: seller_hyun</div>
-            1980년대 필름 카메라, 작동 확인 완료. 실사용감 있으나 기능 이상 없음. 렌즈 스크래치 없음, 셔터 정상 작동 확인.
+            <div style={{ fontWeight: 700, marginBottom: 6, color: 'var(--black)' }}>판매자: seller_otaku</div>
+            미개봉 새제품, 박스 손상 없음. 도색 상태 양호하며 부속품 전체 포함(교체용 손 4종, 전용 스탠드 포함). 정품 인증 스티커 확인 완료.
           </div>
         </div>
       </div>

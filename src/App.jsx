@@ -1,4 +1,5 @@
-import { Routes, Route } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import SignUp from './pages/SignUp.jsx'
 import Login from './pages/Login.jsx'
 import Home from './pages/Home.jsx'
@@ -9,18 +10,31 @@ import BidHistory from './pages/BidHistory.jsx'
 import MyPage from './pages/MyPage.jsx'
 import AdminDashboard from './pages/AdminDashboard.jsx'
 
+function ScrollToTop() {
+  const { pathname } = useLocation()
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
+
+  return null
+}
+
 export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/signup" element={<SignUp />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/auctions" element={<AuctionList />} />
-      <Route path="/auctions/new" element={<AuctionCreate />} />
-      <Route path="/auctions/:id" element={<AuctionDetail />} />
-      <Route path="/bids" element={<BidHistory />} />
-      <Route path="/mypage" element={<MyPage />} />
-      <Route path="/admin" element={<AdminDashboard />} />
-    </Routes>
+    <>
+      <ScrollToTop />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/signup" element={<SignUp />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/auctions" element={<AuctionList />} />
+        <Route path="/auctions/new" element={<AuctionCreate />} />
+        <Route path="/auctions/:id" element={<AuctionDetail />} />
+        <Route path="/bids" element={<BidHistory />} />
+        <Route path="/mypage" element={<MyPage />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+      </Routes>
+    </>
   )
 }

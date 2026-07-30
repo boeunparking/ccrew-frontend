@@ -2,10 +2,10 @@ import { Link, useLocation } from 'react-router-dom'
 
 const categories = [
   { label: '전체', path: '/auctions' },
-  { label: '시계', path: '/auctions?cat=watch' },
-  { label: '카메라', path: '/auctions?cat=camera' },
-  { label: '스니커즈', path: '/auctions?cat=sneakers' },
-  { label: '빈티지', path: '/auctions?cat=vintage' },
+  { label: '넨도로이드', path: '/auctions?cat=nendoroid' },
+  { label: '스케일 피규어', path: '/auctions?cat=scale' },
+  { label: '건프라·프라모델', path: '/auctions?cat=gunpla' },
+  { label: '굿즈', path: '/auctions?cat=goods' },
   { label: '기타', path: '/auctions?cat=etc' },
 ]
 
@@ -21,7 +21,12 @@ export default function Nav({ showCreate = false, showCategories = true }) {
         <Link to="/signup">회원가입</Link>
       </div>
       <div className="topbar">
-        <Link to="/" className="logo">경매CREW</Link>
+        <Link to="/" className="logo">
+          CloudDuck
+          <span style={{ fontWeight: 400, fontSize: 11, color: 'var(--gray-1)', marginLeft: 6, letterSpacing: '0.02em' }}>
+            클라우드덕후
+          </span>
+        </Link>
         <div className="navright">
           {showCreate && (
             <Link to="/auctions/new" className="btn btn-outline-solid">경매 등록</Link>

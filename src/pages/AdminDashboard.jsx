@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
 
 const initialAuctions = [
-  { name: '빈티지 필름 카메라', price: 42000, secondsLeft: 192 },
-  { name: '한정판 스니커즈', price: 128000, secondsLeft: 720 },
-  { name: '디자이너 시계', price: 310000, secondsLeft: 2400 },
-  { name: '아날로그 턴테이블', price: 95000, secondsLeft: 3600 },
+  { name: '원피스 루피 기어5 스케일 피규어', price: 42000, secondsLeft: 192 },
+  { name: '명일방주 텍사스 스케일 피규어', price: 128000, secondsLeft: 720 },
+  { name: '에반게리온 초합금 로봇혼', price: 310000, secondsLeft: 2400 },
+  { name: '건담 RX-78-2 PG 프라모델', price: 95000, secondsLeft: 3600 },
 ]
 
 const suspicious = [
@@ -77,7 +77,7 @@ export default function AdminDashboard() {
   return (
     <div className="page-wrap">
       <div className="topbar">
-        <div className="logo">경매CREW <span style={{ fontWeight: 400, fontSize: 11, color: '#8C8C8C' }}>Admin</span></div>
+        <div className="logo">CloudDuck <span style={{ fontWeight: 400, fontSize: 11, color: '#8C8C8C' }}>Admin</span></div>
         <div className="live-label"><span className="live-dot" />실시간 연결됨 · 마지막 갱신 {elapsed}초 전</div>
       </div>
 

@@ -33,7 +33,7 @@ export default function AuctionCreate() {
 
         <div className="form-row">
           <label>상품명</label>
-          <input name="name" placeholder="예) 빈티지 필름 카메라" value={form.name} onChange={handleChange} required />
+          <input name="name" placeholder="예) 원피스 루피 기어5 스케일 피규어" value={form.name} onChange={handleChange} required />
         </div>
         <div className="form-cols2">
           <div className="form-row">

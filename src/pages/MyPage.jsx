@@ -3,19 +3,19 @@ import { Link } from 'react-router-dom'
 import Nav from '../components/Nav.jsx'
 
 const sellItems = [
-  { name: '빈티지 카메라', info: '현재가 42,000원', status: '진행중', statusColor: '#141414' },
-  { name: '수제 가죽가방', info: '낙찰가 76,000원', status: '낙찰완료', statusColor: '#8C8C8C' },
-  { name: '무선 이어폰', info: '-', status: '유찰', statusColor: '#C4C4C4' },
+  { name: '원피스 루피 기어5 스케일 피규어', info: '현재가 42,000원', status: '진행중', statusColor: '#141414' },
+  { name: '귀멸의칼날 넨도로이드 네즈코', info: '낙찰가 76,000원', status: '낙찰완료', statusColor: '#8C8C8C' },
+  { name: '체인소맨 파워 피규어', info: '-', status: '유찰', statusColor: '#C4C4C4' },
 ]
 
 const buyItems = [
-  { name: '빈티지 카메라', info: '내 입찰가 42,000원', status: '최고가', statusColor: '#141414' },
-  { name: '한정판 스니커즈', info: '내 입찰가 120,000원', status: '경쟁중', statusColor: '#C4C4C4' },
+  { name: '원피스 루피 기어5 스케일 피규어', info: '내 입찰가 42,000원', status: '최고가', statusColor: '#141414' },
+  { name: '명일방주 텍사스 스케일 피규어', info: '내 입찰가 120,000원', status: '경쟁중', statusColor: '#C4C4C4' },
 ]
 
 const notifications = [
-  { name: '한정판 스니커즈 — 새로운 입찰이 등록되었습니다', info: '5분 전' },
-  { name: '빈티지 카메라 — 낙찰되었습니다', info: '1시간 전' },
+  { name: '명일방주 텍사스 스케일 피규어 — 새로운 입찰이 등록되었습니다', info: '5분 전' },
+  { name: '원피스 루피 기어5 스케일 피규어 — 낙찰되었습니다', info: '1시간 전' },
 ]
 
 const tabs = ['판매', '구매', '알림']

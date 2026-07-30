@@ -2,17 +2,17 @@ import { Link } from 'react-router-dom'
 import Nav from '../components/Nav.jsx'
 
 const bento = [
-  { id: 1, name: '빈티지 필름 카메라', brand: 'Leica Type', price: 42000, tag: '마감임박', large: true },
-  { id: 2, name: '한정판 스니커즈', brand: 'Rare Drop', price: 128000, tag: 'NEW' },
-  { id: 3, name: '디자이너 시계', brand: 'Atelier', price: 310000, tag: '' },
-  { id: 4, name: '아날로그 턴테이블', brand: 'Studio Sound', price: 95000, tag: '' },
-  { id: 5, name: '수제 가죽가방', brand: 'Craft House', price: 76000, tag: '인기' },
+  { id: 1, name: '원피스 루피 기어5 스케일 피규어', brand: 'Banpresto', price: 42000, tag: '마감임박', large: true },
+  { id: 2, name: '귀멸의칼날 넨도로이드 네즈코', brand: 'Good Smile Company', price: 68000, tag: 'NEW' },
+  { id: 3, name: '에반게리온 초합금 로봇혼', brand: 'Bandai Spirits', price: 155000, tag: '' },
+  { id: 4, name: '건담 RX-78-2 PG 프라모델', brand: 'Bandai', price: 89000, tag: '' },
+  { id: 5, name: '명일방주 텍사스 스케일 피규어', brand: 'Myethos', price: 132000, tag: '인기' },
 ]
 
 const picks = [
-  { id: 6, name: '무선 이어폰', brand: 'Sound Lab', price: 28000, tag: '' },
-  { id: 7, name: '클래식 선글라스', brand: 'Optique', price: 54000, tag: '' },
-  { id: 8, name: '미니멀 도자기 세트', brand: 'Studio Clay', price: 61000, tag: '' },
+  { id: 6, name: '스파이 패밀리 아냐 넨도로이드', brand: 'Good Smile Company', price: 54000, tag: '' },
+  { id: 7, name: '체인소맨 파워 피규어', brand: 'Kotobukiya', price: 61000, tag: '' },
+  { id: 8, name: '젤다의전설 링크 스케일 피규어', brand: 'First 4 Figures', price: 210000, tag: '' },
 ]
 
 export default function Home() {
@@ -22,8 +22,8 @@ export default function Home() {
 
       <div className="hero">
         <div className="hero-copy">
-          <div className="hero-eyebrow">Weekly Auction</div>
-          <div className="hero-title">이번 주, 놓치면 후회할<br />컬렉터 아이템들</div>
+          <div className="hero-eyebrow">Weekly Drop</div>
+          <div className="hero-title">이번 주, 놓치면 후회할<br />덕후들의 피규어 경매</div>
           <Link to="/auctions" className="hero-cta">경매 둘러보기</Link>
         </div>
       </div>
