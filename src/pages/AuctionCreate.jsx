@@ -1,11 +1,14 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Nav from '../components/Nav.jsx'
+import { api } from '../lib/api.js'
 
 export default function AuctionCreate() {
   const navigate = useNavigate()
   const [form, setForm] = useState({ name: '', startPrice: '', endTime: '', description: '' })
   const [imageFile, setImageFile] = useState(null)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value })
@@ -15,17 +18,35 @@ export default function AuctionCreate() {
     setImageFile(e.target.files?.[0] ?? null)
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    // TODO: 이미지 S3 업로드 + 경매 등록 API 연동
-    console.log('create auction', form, imageFile)
-    navigate('/auctions')
+    setError('')
+    setLoading(true)
+    try {
+      let images = []
+
+      if (imageFile) {
+        // 1) presigned URL 발급 2) 브라우저에서 S3로 직접 PUT
+        //    파일이 백엔드 컨테이너를 거치지 않는다
+        const { key } = await api.uploadImage(imageFile)
+        images = [key]
+      }
+
+      const { id } = await api.createAuction({ ...form, images })
+      navigate(`/auctions/${id}`)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <div className="page-wrap">
       <Nav showCategories={false} />
       <form className="form-wrap" style={{ maxWidth: 420 }} onSubmit={handleSubmit}>
+        {error && <div style={{ color: "#c0392b", fontSize: 13, marginBottom: 12, padding: "8px 12px", background: "#fdecea", borderRadius: 6 }}>{error}</div>}
+
         <label className="upload-box" htmlFor="imageUpload">
           {imageFile ? imageFile.name : '+ 상품 이미지 업로드 (S3)'}
         </label>
@@ -49,7 +70,9 @@ export default function AuctionCreate() {
           <label>상품 설명</label>
           <textarea name="description" placeholder="상품 상태, 특이사항 등을 입력하세요" value={form.description} onChange={handleChange} />
         </div>
-        <button type="submit" className="form-btn">경매 등록하기</button>
+        <button type="submit" className="form-btn" disabled={loading}>
+          {loading ? '등록 중...' : '경매 등록하기'}
+        </button>
       </form>
     </div>
   )

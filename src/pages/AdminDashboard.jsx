@@ -1,22 +1,5 @@
 import { useState, useEffect } from 'react'
-
-const initialAuctions = [
-  { name: '원피스 루피 기어5 스케일 피규어', price: 42000, secondsLeft: 192 },
-  { name: '명일방주 텍사스 스케일 피규어', price: 128000, secondsLeft: 720 },
-  { name: '에반게리온 초합금 로봇혼', price: 310000, secondsLeft: 2400 },
-  { name: '건담 RX-78-2 PG 프라모델', price: 95000, secondsLeft: 3600 },
-]
-
-const suspicious = [
-  { t: '12:41:02', msg: 'user_k22 → 본인 등록 상품에 입찰 시도 (차단됨)' },
-  { t: '12:35:47', msg: 'user_h91 → 90초 내 7회 연속 입찰 (모니터링 대상 등록)' },
-]
-
-const logs = [
-  { t: '12:44:10', msg: 'user_m03 로그인 성공 (Seoul)' },
-  { t: '12:43:52', msg: '관리자 alarm: CPU 사용률 82% 도달 (auto-scaling 트리거)' },
-  { t: '12:41:30', msg: '비정상 접근 시도 차단 — IP 203.0.113.44' },
-]
+import { api } from '../lib/api.js'
 
 function fmtTime(sec) {
   const m = Math.floor(sec / 60)
@@ -25,47 +8,48 @@ function fmtTime(sec) {
 }
 
 export default function AdminDashboard() {
-  const [bidCount, setBidCount] = useState(1284)
-  const [activeUsers, setActiveUsers] = useState(312)
-  const [elapsed, setElapsed] = useState(0)
-  const [auctions, setAuctions] = useState(initialAuctions)
-  const [claims, setClaims] = useState([
-    { name: '상품 미배송 신고', user: 'user_a15', status: '대기' },
-    { name: '상품 상태 불일치', user: 'user_c92', status: '처리중' },
-    { name: '낙찰 후 대금 미결제', user: 'user_b77', status: '완료' },
-  ])
+  const [stats, setStats] = useState({ bidCount: 0, activeUsers: 0, suspiciousCount: 0 })
+  const [auctions, setAuctions] = useState([])
+  const [suspicious, setSuspicious] = useState([])
+  const [logs, setLogs] = useState([])
+  const [claims, setClaims] = useState([])
+  const [lastUpdated, setLastUpdated] = useState(0)
+  const [error, setError] = useState('')
+
+  const loadAll = () => {
+    Promise.all([
+      api.adminStats(),
+      api.adminAuctions(),
+      api.adminSuspicious(),
+      api.adminLogs(),
+      api.adminClaims(),
+    ])
+      .then(([s, a, sus, l, c]) => {
+        setStats(s)
+        setAuctions(a.items)
+        setSuspicious(sus.items)
+        setLogs(l.items)
+        setClaims(c.items)
+        setLastUpdated(0)
+        setError('')
+      })
+      .catch((e) => setError(e.message))
+  }
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setElapsed((e) => e + 1)
-
-      setAuctions((prev) =>
-        prev.map((a) => (a.secondsLeft > 0 ? { ...a, secondsLeft: a.secondsLeft - 1 } : a))
-      )
-
-      if (Math.random() < 0.35) {
-        setAuctions((prev) => {
-          const idx = Math.floor(Math.random() * prev.length)
-          const bump = (Math.floor(Math.random() * 5) + 1) * 1000
-          return prev.map((a, i) => (i === idx ? { ...a, price: a.price + bump } : a))
-        })
-        setBidCount((c) => c + 1)
-      }
-
-      setActiveUsers((u) => Math.max(0, u + Math.floor(Math.random() * 7 - 3)))
-    }, 1000)
-    return () => clearInterval(timer)
+    loadAll()
+    const poll = setInterval(loadAll, 5000)
+    const tick = setInterval(() => setLastUpdated((s) => s + 1), 1000)
+    return () => { clearInterval(poll); clearInterval(tick) }
   }, [])
 
-  const advanceClaim = (i) => {
-    const order = ['대기', '처리중', '완료']
-    setClaims((prev) =>
-      prev.map((c, idx) => {
-        if (idx !== i) return c
-        const next = order[Math.min(order.indexOf(c.status) + 1, order.length - 1)]
-        return { ...c, status: next }
-      })
-    )
+  const advanceClaim = async (id) => {
+    try {
+      const updated = await api.advanceClaim(id)
+      setClaims((prev) => prev.map((c) => (c.id === id ? updated : c)))
+    } catch (e) {
+      setError(e.message)
+    }
   }
 
   const statusBadge = (s) => {
@@ -74,27 +58,40 @@ export default function AdminDashboard() {
     return <span className="badge2">대기</span>
   }
 
+  if (error) {
+    return (
+      <div className="page-wrap">
+        <div className="topbar">
+          <div className="logo">CloudDuck <span style={{ fontWeight: 400, fontSize: 11, color: '#8C8C8C' }}>Admin</span></div>
+        </div>
+        <p style={{ padding: 24, color: '#c0392b' }}>
+          {error} — 관리자 계정으로 로그인했는지 확인해 주세요.
+        </p>
+      </div>
+    )
+  }
+
   return (
     <div className="page-wrap">
       <div className="topbar">
         <div className="logo">CloudDuck <span style={{ fontWeight: 400, fontSize: 11, color: '#8C8C8C' }}>Admin</span></div>
-        <div className="live-label"><span className="live-dot" />실시간 연결됨 · 마지막 갱신 {elapsed}초 전</div>
+        <div className="live-label"><span className="live-dot" />실시간 연결됨 · 마지막 갱신 {lastUpdated}초 전</div>
       </div>
 
       <div className="stat-row">
         <div className="stat">
           <div className="label">오늘 입찰 건수</div>
-          <div className="value">{bidCount.toLocaleString()}</div>
+          <div className="value">{stats.bidCount.toLocaleString()}</div>
           <div className="delta">실시간 갱신</div>
         </div>
         <div className="stat">
           <div className="label">실시간 접속자</div>
-          <div className="value">{activeUsers.toLocaleString()}</div>
+          <div className="value">{stats.activeUsers.toLocaleString()}</div>
           <div className="delta">WebSocket 연결 수 기준</div>
         </div>
         <div className="stat">
           <div className="label">이상 입찰 탐지</div>
-          <div className="value">{suspicious.length}</div>
+          <div className="value">{stats.suspiciousCount}</div>
           <div className="delta">최근 1시간</div>
         </div>
       </div>
@@ -114,8 +111,8 @@ export default function AdminDashboard() {
               </tr>
             </thead>
             <tbody>
-              {auctions.map((a, i) => (
-                <tr key={i}>
+              {auctions.map((a) => (
+                <tr key={a.id}>
                   <td style={{ padding: '10px 18px', borderBottom: '1px solid #F5F5F5' }}>{a.name}</td>
                   <td style={{ padding: '10px 18px', borderBottom: '1px solid #F5F5F5', fontWeight: 700 }}>{a.price.toLocaleString()}원</td>
                   <td style={{ padding: '10px 18px', borderBottom: '1px solid #F5F5F5' }}>{fmtTime(a.secondsLeft)}</td>
@@ -142,12 +139,12 @@ export default function AdminDashboard() {
         <div className="panel">
           <div className="panel-head"><span className="t">분쟁 및 클레임 관리</span></div>
           <div>
-            {claims.map((c, i) => (
-              <div className="claim-row" key={i}>
+            {claims.map((c) => (
+              <div className="claim-row" key={c.id}>
                 <span>{c.name} <span style={{ color: '#B5B5B5' }}>· {c.user}</span></span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   {statusBadge(c.status)}
-                  <button className="act-btn" onClick={() => advanceClaim(i)}>처리</button>
+                  <button className="act-btn" onClick={() => advanceClaim(c.id)}>처리</button>
                 </span>
               </div>
             ))}
@@ -168,7 +165,7 @@ export default function AdminDashboard() {
       </div>
 
       <p className="page-note">
-        * 값은 시뮬레이션 데이터입니다. 실제 연동 시 각 위젯을 5~10초 폴링 또는 WebSocket 구독으로 교체하세요.
+        * 5초마다 서버에서 다시 조회합니다. 실시간 접속자 수는 실제 WebSocket 연결 수입니다.
       </p>
     </div>
   )

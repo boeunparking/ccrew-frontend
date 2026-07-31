@@ -1,41 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Nav from "../components/Nav.jsx";
-
-const initialItems = [
-  {
-    id: 1,
-    name: "원피스 루피 기어5 스케일 피규어",
-    seller: "seller_otaku",
-    myBid: 42000,
-    price: 44000,
-    secondsLeft: 187,
-  },
-  {
-    id: 2,
-    name: "명일방주 텍사스 스케일 피규어",
-    seller: "seller_myethos",
-    myBid: 120000,
-    price: 132000,
-    secondsLeft: 715,
-  },
-  {
-    id: 3,
-    name: "에반게리온 초합금 로봇혼",
-    seller: "seller_evafig",
-    myBid: 300000,
-    price: 310000,
-    secondsLeft: 2395,
-  },
-  {
-    id: 4,
-    name: "귀멸의칼날 넨도로이드 네즈코",
-    seller: "seller_nendo",
-    myBid: 76000,
-    price: 76000,
-    secondsLeft: 0,
-    ended: true,
-  },
-];
+import { api } from "../lib/api.js";
 
 function fmtTime(sec) {
   if (sec <= 0) return "종료";
@@ -54,53 +19,37 @@ function statusOf(item) {
 }
 
 export default function BidHistory() {
-  const [items, setItems] = useState(initialItems);
-  const [flashId, setFlashId] = useState(null);
-  const flashTimeout = useRef(null);
+  const [items, setItems] = useState([]);
+  const [summary, setSummary] = useState({ total: 0, leading: 0, competing: 0, closingSoon: 0 });
+  const [error, setError] = useState("");
+
+  const load = () => {
+    api.myBids()
+      .then((d) => {
+        setItems(d.items);
+        setSummary(d.summary);
+        setError("");
+      })
+      .catch((e) => setError(e.message));
+  };
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setItems((prev) => {
-        let next = prev.map((it) => ({
-          ...it,
-          secondsLeft:
-            !it.ended && it.secondsLeft > 0
-              ? it.secondsLeft - 1
-              : it.secondsLeft,
-        }));
-        if (Math.random() < 0.35) {
-          const candidates = next.filter((it) => !it.ended);
-          if (candidates.length) {
-            const target =
-              candidates[Math.floor(Math.random() * candidates.length)];
-            const bump = (Math.floor(Math.random() * 4) + 1) * 1000;
-            next = next.map((it) =>
-              it.id === target.id ? { ...it, price: it.price + bump } : it,
-            );
-            setFlashId(target.id);
-            clearTimeout(flashTimeout.current);
-            flashTimeout.current = setTimeout(() => setFlashId(null), 700);
-          }
-        }
-        return next;
-      });
-    }, 1500);
-    return () => {
-      clearInterval(timer);
-      clearTimeout(flashTimeout.current);
-    };
+    load();
+    // 서버가 실제 데이터를 갖고 있으므로, 5초마다 다시 물어보는 것으로
+    // 프론트 랜덤 시뮬레이션을 대체한다. 실제 실시간성은 AuctionDetail의
+    // WebSocket 쪽에서 처리되고, 여기는 목록 화면이라 폴링으로 충분하다.
+    const timer = setInterval(load, 5000);
+    return () => clearInterval(timer);
   }, []);
 
-  const totalCount = items.length;
-  const leadCount = items.filter(
-    (it) => !it.ended && it.price <= it.myBid,
-  ).length;
-  const competingCount = items.filter(
-    (it) => !it.ended && it.price > it.myBid,
-  ).length;
-  const closingSoon = items.filter(
-    (it) => !it.ended && it.secondsLeft <= 600,
-  ).length;
+  if (error) {
+    return (
+      <div className="page-wrap">
+        <Nav showCategories={false} />
+        <p style={{ padding: 24, color: "#c0392b" }}>{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="page-wrap">
@@ -128,19 +77,19 @@ export default function BidHistory() {
       <div className="summary" style={{ margin: "20px 24px 0" }}>
         <div className="cell">
           <div className="label">참여 중</div>
-          <div className="value">{totalCount}</div>
+          <div className="value">{summary.total}</div>
         </div>
         <div className="cell">
           <div className="label">최고가</div>
-          <div className="value">{leadCount}</div>
+          <div className="value">{summary.leading}</div>
         </div>
         <div className="cell">
           <div className="label">경쟁중</div>
-          <div className="value">{competingCount}</div>
+          <div className="value">{summary.competing}</div>
         </div>
         <div className="cell">
           <div className="label">마감임박</div>
-          <div className="value">{closingSoon}</div>
+          <div className="value">{summary.closingSoon}</div>
         </div>
       </div>
 
@@ -149,10 +98,7 @@ export default function BidHistory() {
           const diff = item.price - item.myBid;
           const st = statusOf(item);
           return (
-            <div
-              key={item.id}
-              className={`tl-row ${flashId === item.id ? "flash-row" : ""}`}
-            >
+            <div key={item.id} className="tl-row">
               <div className="tl-info">
                 <div className="tl-name">{item.name}</div>
                 <div className="tl-seller">{item.seller}</div>
@@ -175,8 +121,12 @@ export default function BidHistory() {
         })}
       </div>
 
+      {items.length === 0 && (
+        <p style={{ padding: "24px", color: "#8C8C8C" }}>참여 중인 입찰이 없습니다.</p>
+      )}
+
       <p style={{ fontSize: 11, color: "#B5B5B5", margin: "16px 24px" }}>
-        ▲ = 나보다 높은 입찰 발생 · 가격 변동 시 잠깐 강조 표시됩니다
+        ▲ = 나보다 높은 입찰 발생 · 5초마다 갱신됩니다
       </p>
     </div>
   );

@@ -1,23 +1,23 @@
-import { useEffect } from 'react'
-import { Routes, Route, useLocation } from 'react-router-dom'
-import SignUp from './pages/SignUp.jsx'
-import Login from './pages/Login.jsx'
-import Home from './pages/Home.jsx'
-import AuctionList from './pages/AuctionList.jsx'
-import AuctionDetail from './pages/AuctionDetail.jsx'
-import AuctionCreate from './pages/AuctionCreate.jsx'
-import BidHistory from './pages/BidHistory.jsx'
-import MyPage from './pages/MyPage.jsx'
-import AdminDashboard from './pages/AdminDashboard.jsx'
+import { useEffect } from "react";
+import { Routes, Route, useLocation } from "react-router-dom";
+import SignUp from "./pages/SignUp.jsx";
+import Login from "./pages/Login.jsx";
+import Home from "./pages/Home.jsx";
+import AuctionList from "./pages/AuctionList.jsx";
+import AuctionDetail from "./pages/AuctionDetail.jsx";
+import AuctionCreate from "./pages/AuctionCreate.jsx";
+import BidHistory from "./pages/BidHistory.jsx";
+import MyPage from "./pages/MyPage.jsx";
+import AdminDashboard from "./pages/AdminDashboard.jsx";
 
 function ScrollToTop() {
-  const { pathname } = useLocation()
+  const { pathname } = useLocation();
 
   useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [pathname])
+    window.scrollTo(0, 0);
+  }, [pathname]);
 
-  return null
+  return null;
 }
 
 export default function App() {
@@ -36,5 +36,5 @@ export default function App() {
         <Route path="/admin" element={<AdminDashboard />} />
       </Routes>
     </>
-  )
+  );
 }

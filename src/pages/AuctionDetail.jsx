@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import Nav from '../components/Nav.jsx'
+import { api, auth } from '../lib/api.js'
+import { useAuctionSocket } from '../lib/useAuctionSocket.js'
 
 function formatTime(sec) {
   const h = Math.floor(sec / 3600)
@@ -9,28 +11,36 @@ function formatTime(sec) {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
-const related = [
-  { id: 11, name: '루피 기어5 아크릴 스탠드', brand: 'SK Japan', price: 8000 },
-  { id: 12, name: '원피스 피규어 디스플레이 케이스', brand: 'Craft Case', price: 15000 },
-  { id: 13, name: '기어5 응원봉 굿즈', brand: 'Toei Animation Goods', price: 12000 },
-]
-
 export default function AuctionDetail() {
   const { id } = useParams()
-  const [secondsLeft, setSecondsLeft] = useState(192)
-  const [currentPrice, setCurrentPrice] = useState(42000)
+
+  const [auction, setAuction] = useState(null)
+  const [related, setRelated] = useState([])
+  const [secondsLeft, setSecondsLeft] = useState(0)
+  const [currentPrice, setCurrentPrice] = useState(0)
+  const [bidderCount, setBidderCount] = useState(0)
+  const [history, setHistory] = useState([])
   const [bidInput, setBidInput] = useState('')
   const [wishlisted, setWishlisted] = useState(false)
   const [flash, setFlash] = useState(false)
   const [activeThumb, setActiveThumb] = useState(0)
-  const [bidderCount, setBidderCount] = useState(14)
-  const [history, setHistory] = useState([
-    { user: 'user_c92', price: 42000 },
-    { user: 'user_a15', price: 40000 },
-    { user: 'user_b77', price: 38000 },
-  ])
+  const [error, setError] = useState('')
   const flashTimeout = useRef(null)
 
+  // 최초 로드
+  useEffect(() => {
+    api.getAuction(id).then((a) => {
+      setAuction(a)
+      setCurrentPrice(a.currentPrice)
+      setSecondsLeft(a.secondsLeft)
+      setBidderCount(a.bidderCount)
+      setHistory(a.history)
+    }).catch((e) => setError(e.message))
+
+    api.getRelated(id).then((d) => setRelated(d.items)).catch(() => {})
+  }, [id])
+
+  // 로컬 카운트다운 (화면용, 서버 값과 별개로 매초 감소)
   useEffect(() => {
     const timer = setInterval(() => {
       setSecondsLeft((s) => (s > 0 ? s - 1 : 0))
@@ -38,15 +48,37 @@ export default function AuctionDetail() {
     return () => clearInterval(timer)
   }, [])
 
-  const placeBid = (amount) => {
-    if (!amount || amount <= currentPrice) return
-    setCurrentPrice(amount)
-    setHistory((prev) => [{ user: '나', price: amount }, ...prev])
-    setBidderCount((c) => c + 1)
+  const runFlash = () => {
     setFlash(true)
     clearTimeout(flashTimeout.current)
     flashTimeout.current = setTimeout(() => setFlash(false), 400)
-    // TODO: 실제 입찰 API 연동 (+ WebSocket 브로드캐스트)
+  }
+
+  // 다른 사람이 입찰하면 여기로 실시간으로 들어온다
+  useAuctionSocket(id, (msg) => {
+    setCurrentPrice(msg.currentPrice)
+    setSecondsLeft(msg.secondsLeft)
+    setHistory((prev) => [{ user: msg.bidder, price: msg.currentPrice, at: msg.at }, ...prev])
+    setBidderCount((c) => c + 1)
+    runFlash()
+  })
+
+  const placeBid = async (amount) => {
+    if (!amount) return
+    if (!auth.isLoggedIn()) {
+      setError('로그인이 필요합니다')
+      return
+    }
+    setError('')
+    try {
+      // 성공하면 내 화면은 WebSocket 브로드캐스트로 되돌아와서 갱신된다.
+      // 그래도 체감 지연 없이 바로 보이도록 낙관적으로 먼저 반영한다.
+      await api.placeBid(id, amount)
+      setCurrentPrice(amount)
+      runFlash()
+    } catch (e) {
+      setError(e.message)
+    }
   }
 
   const handleBidSubmit = (e) => {
@@ -56,6 +88,17 @@ export default function AuctionDetail() {
   }
 
   const quickBid = (increment) => placeBid(currentPrice + increment)
+
+  if (!auction) {
+    return (
+      <div className="page-wrap">
+        <Nav showCategories={false} />
+        <p style={{ padding: 24, color: error ? '#c0392b' : '#8C8C8C' }}>
+          {error || '불러오는 중...'}
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div className="page-wrap">
@@ -76,8 +119,8 @@ export default function AuctionDetail() {
         </div>
 
         <div className="detail-right">
-          <div className="detail-brand">Banpresto · 경매 #{id}</div>
-          <div className="detail-title">원피스 루피 기어5 스케일 피규어</div>
+          <div className="detail-brand">{auction.brand} · 경매 #{id}</div>
+          <div className="detail-title">{auction.name}</div>
 
           <div className="social-proof"><b>{bidderCount}명</b>이 입찰에 참여하고 있어요</div>
 
@@ -89,6 +132,8 @@ export default function AuctionDetail() {
             <div className="label">현재 최고가</div>
             <div className={`big ${flash ? 'flash' : ''}`}>{currentPrice.toLocaleString()}원</div>
           </div>
+
+          {error && <div style={{ color: "#c0392b", fontSize: 13, marginBottom: 12, padding: "8px 12px", background: "#fdecea", borderRadius: 6 }}>{error}</div>}
 
           <div className="quickbid-row">
             <button className="quickbid-btn" onClick={() => quickBid(1000)}>+1,000</button>
@@ -120,7 +165,7 @@ export default function AuctionDetail() {
           <div className="hist">
             <div className="hist-head"><span className="t">실시간 입찰 이력</span></div>
             {history.map((h, i) => (
-              <div className={`row ${h.user === '나' ? 'me' : ''}`} key={i}>
+              <div className="row" key={i}>
                 <span>{h.user}</span>
                 <span>{h.price.toLocaleString()}원</span>
               </div>
@@ -128,30 +173,32 @@ export default function AuctionDetail() {
           </div>
 
           <div className="desc">
-            <div style={{ fontWeight: 700, marginBottom: 6, color: 'var(--black)' }}>판매자: seller_otaku</div>
-            미개봉 새제품, 박스 손상 없음. 도색 상태 양호하며 부속품 전체 포함(교체용 손 4종, 전용 스탠드 포함). 정품 인증 스티커 확인 완료.
+            <div style={{ fontWeight: 700, marginBottom: 6, color: 'var(--black)' }}>판매자: {auction.seller}</div>
+            {auction.description}
           </div>
         </div>
       </div>
 
-      <div className="related-strip">
-        <div className="section-head" style={{ padding: '0 0 18px' }}>
-          <div>
-            <div className="section-eyebrow">You May Also Like</div>
-            <div className="section-title">함께 보면 좋은 경매</div>
+      {related.length > 0 && (
+        <div className="related-strip">
+          <div className="section-head" style={{ padding: '0 0 18px' }}>
+            <div>
+              <div className="section-eyebrow">You May Also Like</div>
+              <div className="section-title">함께 보면 좋은 경매</div>
+            </div>
+          </div>
+          <div className="grid3" style={{ padding: 0 }}>
+            {related.map((item) => (
+              <Link key={item.id} to={`/auctions/${item.id}`} className="card">
+                <div className="cardimg" style={{ aspectRatio: '3 / 4', height: 'auto' }} />
+                <div className="brand">{item.brand}</div>
+                <div className="name">{item.name}</div>
+                <div className="price">{item.price.toLocaleString()}원</div>
+              </Link>
+            ))}
           </div>
         </div>
-        <div className="grid3" style={{ padding: 0 }}>
-          {related.map((item) => (
-            <Link key={item.id} to={`/auctions/${item.id}`} className="card">
-              <div className="cardimg" style={{ aspectRatio: '3 / 4', height: 'auto' }} />
-              <div className="brand">{item.brand}</div>
-              <div className="name">{item.name}</div>
-              <div className="price">{item.price.toLocaleString()}원</div>
-            </Link>
-          ))}
-        </div>
-      </div>
+      )}
 
       <div className="sticky-bid-bar">
         <div className="cur">현재가<b>{currentPrice.toLocaleString()}원</b></div>
