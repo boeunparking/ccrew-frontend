@@ -7,6 +7,7 @@ export default function AuctionCreate() {
   const navigate = useNavigate()
   const [form, setForm] = useState({ name: '', startPrice: '', endTime: '', description: '' })
   const [imageFile, setImageFile] = useState(null)
+  const [previewUrl, setPreviewUrl] = useState(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -15,7 +16,10 @@ export default function AuctionCreate() {
   }
 
   const handleFile = (e) => {
-    setImageFile(e.target.files?.[0] ?? null)
+    const file = e.target.files?.[0] ?? null
+    setImageFile(file)
+    // S3에 올리기 전에 로컬에서 미리 보여준다. 업로드 성공 여부와 무관.
+    setPreviewUrl(file ? URL.createObjectURL(file) : null)
   }
 
   const handleSubmit = async (e) => {
@@ -47,8 +51,21 @@ export default function AuctionCreate() {
       <form className="form-wrap" style={{ maxWidth: 420 }} onSubmit={handleSubmit}>
         {error && <div style={{ color: "#c0392b", fontSize: 13, marginBottom: 12, padding: "8px 12px", background: "#fdecea", borderRadius: 6 }}>{error}</div>}
 
-        <label className="upload-box" htmlFor="imageUpload">
-          {imageFile ? imageFile.name : '+ 상품 이미지 업로드 (S3)'}
+        <label
+          className="upload-box"
+          htmlFor="imageUpload"
+          style={
+            previewUrl
+              ? {
+                  backgroundImage: `url(${previewUrl})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  color: 'transparent',
+                }
+              : undefined
+          }
+        >
+          {!previewUrl && '+ 상품 이미지 업로드 (S3)'}
         </label>
         <input id="imageUpload" type="file" accept="image/*" onChange={handleFile} style={{ display: 'none' }} />
 

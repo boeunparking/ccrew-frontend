@@ -106,13 +106,29 @@ export default function AuctionDetail() {
 
       <div className="detail-wrap">
         <div className="gallery">
-          <div className="gallery-main" />
+          <div
+            className="gallery-main"
+            style={
+              auction.images[activeThumb]
+                ? {
+                    backgroundImage: `url(${auction.images[activeThumb]})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                  }
+                : undefined
+            }
+          />
           <div className="gallery-thumbs">
-            {[0, 1, 2, 3].map((i) => (
+            {(auction.images.length > 0 ? auction.images : [null, null, null, null]).map((img, i) => (
               <div
                 key={i}
                 className={`thumb ${activeThumb === i ? 'active' : ''}`}
                 onClick={() => setActiveThumb(i)}
+                style={
+                  img
+                    ? { backgroundImage: `url(${img})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+                    : undefined
+                }
               />
             ))}
           </div>
@@ -190,7 +206,16 @@ export default function AuctionDetail() {
           <div className="grid3" style={{ padding: 0 }}>
             {related.map((item) => (
               <Link key={item.id} to={`/auctions/${item.id}`} className="card">
-                <div className="cardimg" style={{ aspectRatio: '3 / 4', height: 'auto' }} />
+                <div
+                  className="cardimg"
+                  style={{
+                    aspectRatio: '3 / 4',
+                    height: 'auto',
+                    backgroundImage: item.thumbnail ? `url(${item.thumbnail})` : undefined,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                  }}
+                />
                 <div className="brand">{item.brand}</div>
                 <div className="name">{item.name}</div>
                 <div className="price">{item.price.toLocaleString()}원</div>

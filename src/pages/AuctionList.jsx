@@ -43,7 +43,16 @@ export default function AuctionList() {
         <div className="grid3" style={{ paddingTop: 24 }}>
           {items.map((item) => (
             <Link key={item.id} to={`/auctions/${item.id}`} className="card">
-              <div className="cardimg" style={{ aspectRatio: '3 / 4', height: 'auto' }} />
+              <div
+                className="cardimg"
+                style={{
+                  aspectRatio: '3 / 4',
+                  height: 'auto',
+                  backgroundImage: item.thumbnail ? `url(${item.thumbnail})` : undefined,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }}
+              />
               <div className="brand">{item.brand}</div>
               <div className="name">{item.name}</div>
               <div className="price">{item.price.toLocaleString()}원</div>

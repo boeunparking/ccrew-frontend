@@ -42,7 +42,14 @@ export default function Home() {
       <div className="bento">
         {closingSoon.map((item, i) => (
           <Link key={item.id} to={`/auctions/${item.id}`} className={`card ${i === 0 ? 'large' : ''}`}>
-            <div className="cardimg">
+            <div
+              className="cardimg"
+              style={{
+                backgroundImage: item.thumbnail ? `url(${item.thumbnail})` : undefined,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }}
+            >
               {item.tag && <span className="cardtag">{item.tag}</span>}
             </div>
             <div className="brand">{item.brand}</div>
@@ -61,7 +68,14 @@ export default function Home() {
       <div className="grid3">
         {picks.map((item) => (
           <Link key={item.id} to={`/auctions/${item.id}`} className="card">
-            <div className="cardimg" />
+            <div
+              className="cardimg"
+              style={{
+                backgroundImage: item.thumbnail ? `url(${item.thumbnail})` : undefined,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }}
+            />
             <div className="brand">{item.brand}</div>
             <div className="name">{item.name}</div>
             <div className="price">{item.price.toLocaleString()}원</div>
