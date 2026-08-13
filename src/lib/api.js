@@ -1,6 +1,7 @@
-// CloudFront가 /api/*를 ALB로 넘겨주므로 같은 출처다.
-// 절대 URL도, CORS 설정도, VITE_API_URL 같은 빌드타임 환경변수도 필요 없다.
-// (Vite 환경변수는 빌드 시점에 코드에 박혀서 배포 후 바꿀 수 없다는 점도 피할 수 있다.)
+// API는 api.cloudduck.cloud 라는 별도 호스트에 있다.
+// 경로 기반(/api/*)이 아니라 서브도메인 기반이므로 모든 요청이 교차 출처다.
+// 주소는 config.js가 정하고(런타임 교체 가능), 여기서는 경로만 신경 쓴다.
+import { API_BASE_URL } from './config.js';
 
 const TOKEN_KEY = 'cd_token';
 
@@ -21,11 +22,18 @@ async function request(path, { method = 'GET', body, auth: needAuth = false } = 
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const res = await fetch(`/api${path}`, {
-    method,
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  let res;
+  try {
+    res = await fetch(`${API_BASE_URL}${path}`, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  } catch {
+    // 교차 출처가 되면서 CORS 차단·DNS 실패도 여기로 떨어진다.
+    // fetch가 던지는 'Failed to fetch'만 보여주면 원인을 알기 어렵다.
+    throw new Error(`서버(${API_BASE_URL})에 연결하지 못했습니다`);
+  }
 
   if (res.status === 401) {
     auth.clear();

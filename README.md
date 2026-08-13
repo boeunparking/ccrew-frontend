@@ -4,8 +4,32 @@
 
 ```bash
 npm install
-npm run dev
+npm run dev     # http://localhost:5173
 ```
+
+백엔드도 같이 띄워야 한다 (`ccrew-backend` 에서 `node server.js` → 3000 포트).
+개발용 프록시는 없다. 프론트가 `http://localhost:3000` 으로 직접(교차 출처) 호출하고,
+백엔드 기본 `CORS_ORIGINS` 에 `http://localhost:5173` 이 들어 있어서 통과한다.
+
+## API 주소 설정
+
+API는 `https://api.cloudduck.cloud` 라는 **별도 서브도메인**에 있다.
+(예전에는 같은 도메인의 `/api/*` 경로였다.)
+
+주소는 [src/lib/config.js](src/lib/config.js)가 이 순서로 정한다.
+
+| 순위 | 출처 | 언제 쓰나 |
+|---|---|---|
+| 1 | `window.__CCREW_CONFIG__.apiBaseUrl` ([public/config.js](public/config.js)) | 빌드 후에 바꿔야 할 때 |
+| 2 | `VITE_API_BASE_URL` | 빌드 시점에 고정해도 될 때 |
+| 3 | `http://localhost:3000` | 호스트가 localhost일 때 (개발) |
+| 4 | `https://api.cloudduck.cloud` | 기본값 |
+
+1번을 맨 위에 둔 이유: Vite 환경변수는 빌드 때 코드에 박혀서 이미지 하나를 여러 환경에
+쓸 수 없다. `config.js` 는 컨테이너가 뜰 때(`API_BASE_URL` 환경변수) 또는 S3 객체 교체로
+갈아끼울 수 있어서 **같은 빌드 산출물을 개발/스테이징/운영에 그대로 올릴 수 있다.**
+
+`config.js` 는 절대 캐시하면 안 된다 ([nginx.conf](nginx.conf)에 `no-store` 설정되어 있음).
 
 ## 페이지 구성
 

@@ -1,11 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 
+import { WS_BASE_URL } from './config.js';
+
 /**
  * 경매 하나를 구독해서 다른 사람의 입찰을 실시간으로 받는다.
  * AuctionDetail.jsx에서 사용.
  *
- * 개발: vite proxy가 ws://localhost:3000/ws 로 넘긴다
- * 배포: wss://<cloudfront>/ws → ALB → ECS
+ * 개발: ws://localhost:3000/ws
+ * 배포: wss://api.cloudduck.cloud/ws → ALB → ECS
+ *
+ * 페이지 호스트가 아니라 API 호스트로 붙는다. 백엔드는 Origin을 검사하므로
+ * 프론트 도메인이 백엔드 CORS_ORIGINS에 들어 있어야 연결된다.
  */
 export function useAuctionSocket(auctionId, onBid) {
   const [connected, setConnected] = useState(false);
@@ -23,8 +28,7 @@ export function useAuctionSocket(auctionId, onBid) {
     let timer;
 
     const connect = () => {
-      const scheme = location.protocol === 'https:' ? 'wss' : 'ws';
-      const ws = new WebSocket(`${scheme}://${location.host}/ws?auctionId=${auctionId}`);
+      const ws = new WebSocket(`${WS_BASE_URL}/ws?auctionId=${encodeURIComponent(auctionId)}`);
       socketRef.current = ws;
 
       ws.onopen = () => {
