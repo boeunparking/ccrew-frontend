@@ -1,0 +1,172 @@
+import { useState, useEffect } from 'react'
+import { api } from '../lib/api.js'
+
+function fmtTime(sec) {
+  const m = Math.floor(sec / 60)
+  const s = sec % 60
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+}
+
+export default function AdminDashboard() {
+  const [stats, setStats] = useState({ bidCount: 0, activeUsers: 0, suspiciousCount: 0 })
+  const [auctions, setAuctions] = useState([])
+  const [suspicious, setSuspicious] = useState([])
+  const [logs, setLogs] = useState([])
+  const [claims, setClaims] = useState([])
+  const [lastUpdated, setLastUpdated] = useState(0)
+  const [error, setError] = useState('')
+
+  const loadAll = () => {
+    Promise.all([
+      api.adminStats(),
+      api.adminAuctions(),
+      api.adminSuspicious(),
+      api.adminLogs(),
+      api.adminClaims(),
+    ])
+      .then(([s, a, sus, l, c]) => {
+        setStats(s)
+        setAuctions(a.items)
+        setSuspicious(sus.items)
+        setLogs(l.items)
+        setClaims(c.items)
+        setLastUpdated(0)
+        setError('')
+      })
+      .catch((e) => setError(e.message))
+  }
+
+  useEffect(() => {
+    loadAll()
+    const poll = setInterval(loadAll, 5000)
+    const tick = setInterval(() => setLastUpdated((s) => s + 1), 1000)
+    return () => { clearInterval(poll); clearInterval(tick) }
+  }, [])
+
+  const advanceClaim = async (id) => {
+    try {
+      const updated = await api.advanceClaim(id)
+      setClaims((prev) => prev.map((c) => (c.id === id ? updated : c)))
+    } catch (e) {
+      setError(e.message)
+    }
+  }
+
+  const statusBadge = (s) => {
+    if (s === '완료') return <span className="badge2 muted">완료</span>
+    if (s === '처리중') return <span className="badge2 warn">처리중</span>
+    return <span className="badge2">대기</span>
+  }
+
+  if (error) {
+    return (
+      <div className="page-wrap">
+        <div className="topbar">
+          <div className="logo">CloudDuck <span style={{ fontWeight: 400, fontSize: 11, color: '#8C8C8C' }}>Admin</span></div>
+        </div>
+        <p style={{ padding: 24, color: '#c0392b' }}>
+          {error} — 관리자 계정으로 로그인했는지 확인해 주세요.
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="page-wrap">
+      <div className="topbar">
+        <div className="logo">CloudDuck <span style={{ fontWeight: 400, fontSize: 11, color: '#8C8C8C' }}>Admin</span></div>
+        <div className="live-label"><span className="live-dot" />실시간 연결됨 · 마지막 갱신 {lastUpdated}초 전</div>
+      </div>
+
+      <div className="stat-row">
+        <div className="stat">
+          <div className="label">오늘 입찰 건수</div>
+          <div className="value">{stats.bidCount.toLocaleString()}</div>
+          <div className="delta">실시간 갱신</div>
+        </div>
+        <div className="stat">
+          <div className="label">실시간 접속자</div>
+          <div className="value">{stats.activeUsers.toLocaleString()}</div>
+          <div className="delta">WebSocket 연결 수 기준</div>
+        </div>
+        <div className="stat">
+          <div className="label">이상 입찰 탐지</div>
+          <div className="value">{stats.suspiciousCount}</div>
+          <div className="delta">최근 1시간</div>
+        </div>
+      </div>
+
+      <div className="grid2">
+        <div className="panel">
+          <div className="panel-head">
+            <span className="t">실시간 경매 사이트 리스트</span>
+            <span className="live-label"><span className="live-dot" />LIVE</span>
+          </div>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
+            <thead>
+              <tr>
+                <th style={{ textAlign: 'left', padding: '10px 18px', fontSize: 10.5, color: '#8C8C8C', textTransform: 'uppercase', borderBottom: '1px solid #EDEDED' }}>상품명</th>
+                <th style={{ textAlign: 'left', padding: '10px 18px', fontSize: 10.5, color: '#8C8C8C', textTransform: 'uppercase', borderBottom: '1px solid #EDEDED' }}>현재가</th>
+                <th style={{ textAlign: 'left', padding: '10px 18px', fontSize: 10.5, color: '#8C8C8C', textTransform: 'uppercase', borderBottom: '1px solid #EDEDED' }}>남은시간</th>
+              </tr>
+            </thead>
+            <tbody>
+              {auctions.map((a) => (
+                <tr key={a.id}>
+                  <td style={{ padding: '10px 18px', borderBottom: '1px solid #F5F5F5' }}>{a.name}</td>
+                  <td style={{ padding: '10px 18px', borderBottom: '1px solid #F5F5F5', fontWeight: 700 }}>{a.price.toLocaleString()}원</td>
+                  <td style={{ padding: '10px 18px', borderBottom: '1px solid #F5F5F5' }}>{fmtTime(a.secondsLeft)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="panel">
+          <div className="panel-head"><span className="t">이상 입찰 하이라이트</span></div>
+          <div className="log-list">
+            {suspicious.map((s, i) => (
+              <div className="log-row" key={i}>
+                <span>{s.msg}</span>
+                <span className="t">{s.t}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid2">
+        <div className="panel">
+          <div className="panel-head"><span className="t">분쟁 및 클레임 관리</span></div>
+          <div>
+            {claims.map((c) => (
+              <div className="claim-row" key={c.id}>
+                <span>{c.name} <span style={{ color: '#B5B5B5' }}>· {c.user}</span></span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {statusBadge(c.status)}
+                  <button className="act-btn" onClick={() => advanceClaim(c.id)}>처리</button>
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="panel">
+          <div className="panel-head"><span className="t">시스템 및 보안/로그</span></div>
+          <div className="log-list">
+            {logs.map((l, i) => (
+              <div className="log-row" key={i}>
+                <span>{l.msg}</span>
+                <span className="t">{l.t}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <p className="page-note">
+        * 5초마다 서버에서 다시 조회합니다. 실시간 접속자 수는 실제 WebSocket 연결 수입니다.
+      </p>
+    </div>
+  )
+}
