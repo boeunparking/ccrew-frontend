@@ -37,13 +37,31 @@ API는 `https://api.cloudduck.cloud` 라는 **별도 서브도메인**에 있다
 |---|---|
 | `/` | 홈페이지 |
 | `/signup` | 회원가입 |
-| `/login` | 로그인 |
+| `/login` | 로그인 (이메일 + 구글·카카오 소셜 로그인) |
+| `/oauth/callback` | 소셜 로그인 후 백엔드가 돌려보내는 곳. 화면은 없고 토큰만 저장한다 |
 | `/auctions` | 경매 상품 목록 |
 | `/auctions/:id` | 경매 상품 상세 (입찰 폼, 실시간 이력) |
 | `/auctions/new` | 경매 상품 등록 (판매자) |
 | `/bids` | 입찰 내역 (주식창 스타일, 실시간 시세 시뮬레이션) |
 | `/mypage` | 마이페이지 (판매/구매/알림 탭) |
 | `/admin` | 관리자 대시보드 (실시간 시뮬레이션) |
+
+## 소셜 로그인
+
+로그인/회원가입 화면의 소셜 버튼은 [components/SocialLogin.jsx](src/components/SocialLogin.jsx)다.
+**어떤 버튼을 그릴지는 백엔드가 정한다** — `GET /auth/oauth/providers` 가 키가 설정된
+공급자만 내려주므로, 환경변수를 안 넣은 채 배포해도 눌렀을 때 404가 나는 버튼이 남지 않는다.
+
+버튼을 누르면 `fetch`가 아니라 `window.location`으로 백엔드에 **페이지 이동**한다.
+XHR로 부르면 구글/카카오 동의 화면이 CORS에 막힌다.
+
+돌아올 때 토큰은 쿼리스트링이 아니라 URL 프래그먼트(`#token=...`)로 온다.
+프래그먼트는 서버로 전송되지 않아 액세스 로그·Referer에 토큰이 남지 않는다.
+[OAuthCallback.jsx](src/pages/OAuthCallback.jsx)가 값을 꺼낸 뒤 `history.replaceState`로
+주소창에서 즉시 지운다.
+
+`/oauth/callback` 은 SPA 경로라 정적 호스팅이 index.html로 폴백해야 한다
+(CloudFront 쪽에 403/404 → `/index.html` 설정이 이미 있다).
 
 ## 다음 단계 (실제 연동 시)
 

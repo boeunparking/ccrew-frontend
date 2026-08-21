@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import SignUp from "./pages/SignUp.jsx";
 import Login from "./pages/Login.jsx";
+import OAuthCallback from "./pages/OAuthCallback.jsx";
 import Home from "./pages/Home.jsx";
 import AuctionList from "./pages/AuctionList.jsx";
 import AuctionDetail from "./pages/AuctionDetail.jsx";
@@ -28,6 +29,8 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/login" element={<Login />} />
+        {/* 소셜 로그인이 끝난 뒤 백엔드가 돌려보내는 경로 */}
+        <Route path="/oauth/callback" element={<OAuthCallback />} />
         <Route path="/auctions" element={<AuctionList />} />
         <Route path="/auctions/new" element={<AuctionCreate />} />
         <Route path="/auctions/:id" element={<AuctionDetail />} />

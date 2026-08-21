@@ -58,6 +58,17 @@ export const api = {
   logout: () => auth.clear(),
   me: () => request('/auth/me', { auth: true }),
 
+  // --- 소셜 로그인 ---
+  // 백엔드에 키가 들어간 공급자만 내려온다 (예: ['google', 'kakao']).
+  oauthProviders: () => request('/auth/oauth/providers'),
+
+  /**
+   * 여기는 fetch가 아니라 브라우저를 통째로 보내는 주소다.
+   * XHR로 부르면 구글/카카오 동의 화면이 CORS에 막힌다 — 반드시 location 이동.
+   */
+  oauthStartUrl: (provider, redirectPath = '/') =>
+    `${API_BASE_URL}/auth/oauth/${provider}?redirect=${encodeURIComponent(redirectPath)}`,
+
   // --- 경매 ---
   listAuctions: (params = {}) => {
     const qs = new URLSearchParams(

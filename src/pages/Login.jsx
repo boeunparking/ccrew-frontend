@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Nav from '../components/Nav.jsx'
+import SocialLogin from '../components/SocialLogin.jsx'
 import { api } from '../lib/api.js'
 
 export default function Login() {
@@ -44,6 +45,7 @@ export default function Login() {
         <button type="submit" className="form-btn" disabled={loading}>
           {loading ? '로그인 중...' : '로그인'}
         </button>
+        <SocialLogin redirectPath="/" />
         <div className="form-link">
           계정이 없으신가요? <Link to="/signup" style={{ color: '#141414', textDecoration: 'underline' }}>회원가입</Link>
         </div>

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Nav from '../components/Nav.jsx'
+import SocialLogin from '../components/SocialLogin.jsx'
 import { api } from '../lib/api.js'
 
 export default function SignUp() {
@@ -47,6 +48,8 @@ export default function SignUp() {
         <button type="submit" className="form-btn" disabled={loading}>
           {loading ? '가입 중...' : '회원가입'}
         </button>
+        {/* 소셜로 들어오면 회원가입 폼 자체를 건너뛴다 — 첫 로그인에 계정이 생긴다 */}
+        <SocialLogin redirectPath="/" />
         <div className="form-link">
           이미 계정이 있으신가요? <Link to="/login" style={{ color: '#141414', textDecoration: 'underline' }}>로그인</Link>
         </div>
