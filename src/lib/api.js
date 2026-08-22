@@ -48,12 +48,19 @@ async function request(path, { method = 'GET', body, auth: needAuth = false } = 
     throw apiError(`서버(${API_BASE_URL})에 연결하지 못했습니다`);
   }
 
-  if (res.status === 401) {
+  const data = await res.json().catch(() => ({}));
+
+  // 401을 "세션 만료"로 해석해도 되는 건 우리가 토큰을 보낸 요청뿐이다.
+  //
+  // 토큰을 안 보내는 요청(로그인·회원가입)의 401은 자격증명이 틀렸다는 뜻인데,
+  // 예전에는 여기서 본문도 안 읽고 전부 "세션이 만료되었습니다"로 덮어썼다.
+  // 그래서 비밀번호를 틀리면 로그인 화면에 "세션이 만료되었습니다"가 떴고,
+  // 서버가 보낸 "이메일 또는 비밀번호가 올바르지 않습니다"는 버려졌다.
+  if (res.status === 401 && needAuth) {
     auth.clear();
-    throw apiError('세션이 만료되었습니다. 다시 로그인해 주세요', 401);
+    throw apiError(data.error ?? '세션이 만료되었습니다. 다시 로그인해 주세요', 401);
   }
 
-  const data = await res.json().catch(() => ({}));
   if (!res.ok) throw apiError(data.error ?? '요청을 처리하지 못했습니다', res.status);
   return data;
 }
