@@ -64,6 +64,25 @@ a {
 .util-bar a:hover {
   color: var(--black);
 }
+/* 로그인 상태에서 로그인/회원가입 자리에 뜨는 사용자 이름. 링크가 아니라 표시용이다. */
+.util-bar .util-user {
+  color: var(--black);
+  font-weight: 600;
+}
+/* 로그아웃은 페이지 이동이 아니라 동작이라 button이어야 한다(키보드 접근성).
+   생김새만 util-bar의 링크와 맞춘다. */
+.util-bar .util-link {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+}
+.util-bar .util-link:hover {
+  color: var(--black);
+}
 
 .topbar {
   display: flex;
