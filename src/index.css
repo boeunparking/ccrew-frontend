@@ -835,6 +835,16 @@ a {
   background: var(--black);
   color: #fff;
 }
+/* 되돌릴 수 없는 동작(경매 삭제)은 옆의 일반 버튼과 눈에 띄게 달라야 한다. */
+.act-btn.danger {
+  border-color: #c0392b;
+  color: #c0392b;
+}
+.act-btn.danger:hover {
+  background: #c0392b;
+  border-color: #c0392b;
+  color: #fff;
+}
 
 /* ---------- Bid History (stock ticker) ---------- */
 .summary {

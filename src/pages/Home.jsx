@@ -7,14 +7,27 @@ import { api } from '../lib/api.js'
 export default function Home() {
   const [closingSoon, setClosingSoon] = useState([])
   const [picks, setPicks] = useState([])
+  const [heroImage, setHeroImage] = useState(null)
 
   useEffect(() => {
+    // 마감 임박 = 1시간 이내 종료. 기준은 서버가 정한다(store.js CLOSING_SOON_SECONDS).
     api.listAuctions({ status: '마감임박', sort: 'endingSoon' })
       .then((d) => setClosingSoon(d.items.slice(0, 5)))
       .catch(() => {})
 
     api.listAuctions({ status: '진행중', sort: 'priceDesc' })
-      .then((d) => setPicks(d.items.slice(0, 3)))
+      .then((d) => {
+        setPicks(d.items.slice(0, 3))
+
+        // hero 배경은 진행 중인 경매 사진 중 하나를 무작위로 쓴다.
+        // 같은 응답을 재활용해서 요청을 추가로 만들지 않는다.
+        // 사진이 없는 경매가 섞여 있으므로 썸네일이 있는 것만 후보로 둔다 —
+        // 안 거르면 배경이 비는 경우가 생긴다.
+        const withImage = d.items.filter((i) => i.thumbnail)
+        if (withImage.length > 0) {
+          setHeroImage(withImage[Math.floor(Math.random() * withImage.length)].thumbnail)
+        }
+      })
       .catch(() => {})
   }, [])
 
@@ -23,7 +36,19 @@ export default function Home() {
       <EventPopup />
       <Nav showCreate showCategories={false} />
 
-      <div className="hero">
+      {/* 사진이 없으면 style을 주지 않아 .hero의 기본 회색 배경이 그대로 남는다. */}
+      <div
+        className="hero"
+        style={
+          heroImage
+            ? {
+                backgroundImage: `url(${heroImage})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }
+            : undefined
+        }
+      >
         <div className="hero-copy">
           <div className="hero-eyebrow">Weekly Drop</div>
           <div className="hero-title">이번 주, 놓치면 후회할<br />덕후들의 피규어 경매</div>

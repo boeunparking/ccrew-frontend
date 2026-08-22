@@ -98,6 +98,8 @@ export const api = {
   adminLogs: () => request('/admin/logs', { auth: true }),
   adminClaims: () => request('/admin/claims', { auth: true }),
   advanceClaim: (id) => request(`/admin/claims/${id}`, { method: 'PATCH', auth: true }),
+  // 입찰·이미지까지 같이 지워지고 되돌릴 수 없다. 호출 전에 반드시 확인을 받을 것.
+  adminDeleteAuction: (id) => request(`/admin/auctions/${id}`, { method: 'DELETE', auth: true }),
 
   // --- 이미지 업로드 ---
   // 파일이 백엔드 컨테이너를 거치지 않고 브라우저에서 S3로 바로 올라간다

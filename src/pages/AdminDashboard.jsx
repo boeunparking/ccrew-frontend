@@ -43,6 +43,23 @@ export default function AdminDashboard() {
     return () => { clearInterval(poll); clearInterval(tick) }
   }, [])
 
+  const removeAuction = async (auction) => {
+    // 입찰과 이미지까지 같이 사라지고 되돌릴 수 없다. 5초 폴링이 곧 목록을
+    // 새로 덮어쓰기 때문에, 확인 없이 지우면 눌린 줄이 뭐였는지도 알 수 없게 된다.
+    if (!window.confirm(`"${auction.name}" 경매를 삭제할까요?\n입찰 내역과 이미지도 함께 삭제되며 되돌릴 수 없습니다.`)) {
+      return
+    }
+
+    try {
+      await api.adminDeleteAuction(auction.id)
+      // 폴링(5초)을 기다리지 않고 즉시 목록에서 뺀다.
+      setAuctions((prev) => prev.filter((a) => a.id !== auction.id))
+      setError('')
+    } catch (e) {
+      setError(e.message)
+    }
+  }
+
   const advanceClaim = async (id) => {
     try {
       const updated = await api.advanceClaim(id)
@@ -108,6 +125,7 @@ export default function AdminDashboard() {
                 <th style={{ textAlign: 'left', padding: '10px 18px', fontSize: 10.5, color: '#8C8C8C', textTransform: 'uppercase', borderBottom: '1px solid #EDEDED' }}>상품명</th>
                 <th style={{ textAlign: 'left', padding: '10px 18px', fontSize: 10.5, color: '#8C8C8C', textTransform: 'uppercase', borderBottom: '1px solid #EDEDED' }}>현재가</th>
                 <th style={{ textAlign: 'left', padding: '10px 18px', fontSize: 10.5, color: '#8C8C8C', textTransform: 'uppercase', borderBottom: '1px solid #EDEDED' }}>남은시간</th>
+                <th style={{ textAlign: 'right', padding: '10px 18px', fontSize: 10.5, color: '#8C8C8C', textTransform: 'uppercase', borderBottom: '1px solid #EDEDED' }}>관리</th>
               </tr>
             </thead>
             <tbody>
@@ -116,6 +134,9 @@ export default function AdminDashboard() {
                   <td style={{ padding: '10px 18px', borderBottom: '1px solid #F5F5F5' }}>{a.name}</td>
                   <td style={{ padding: '10px 18px', borderBottom: '1px solid #F5F5F5', fontWeight: 700 }}>{a.price.toLocaleString()}원</td>
                   <td style={{ padding: '10px 18px', borderBottom: '1px solid #F5F5F5' }}>{fmtTime(a.secondsLeft)}</td>
+                  <td style={{ padding: '10px 18px', borderBottom: '1px solid #F5F5F5', textAlign: 'right' }}>
+                    <button className="act-btn danger" onClick={() => removeAuction(a)}>삭제</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
