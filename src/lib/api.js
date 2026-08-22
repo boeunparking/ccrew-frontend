@@ -12,13 +12,26 @@ export const auth = {
   isLoggedIn: () => Boolean(localStorage.getItem(TOKEN_KEY)),
 };
 
+/**
+ * 화면이 원인을 구분할 수 있도록 HTTP 상태를 에러에 실어 보낸다.
+ * 메시지만 던지면 "권한 없음(403)"과 "토큰 문제(401)"가 똑같이 보여서
+ * 어느 쪽인지 알 수 없다 — 실제로 관리자 화면에서 그것 때문에 원인을 못 좁혔다.
+ *
+ * status가 없는 에러는 요청을 보내기도 전에 막힌 경우(토큰 없음, 네트워크 실패)다.
+ */
+function apiError(message, status) {
+  const err = new Error(message);
+  if (status) err.status = status;
+  return err;
+}
+
 async function request(path, { method = 'GET', body, auth: needAuth = false } = {}) {
   const headers = {};
   if (body) headers['Content-Type'] = 'application/json';
 
   if (needAuth) {
     const token = auth.get();
-    if (!token) throw new Error('로그인이 필요합니다');
+    if (!token) throw apiError('로그인이 필요합니다');
     headers.Authorization = `Bearer ${token}`;
   }
 
@@ -32,16 +45,16 @@ async function request(path, { method = 'GET', body, auth: needAuth = false } = 
   } catch {
     // 교차 출처가 되면서 CORS 차단·DNS 실패도 여기로 떨어진다.
     // fetch가 던지는 'Failed to fetch'만 보여주면 원인을 알기 어렵다.
-    throw new Error(`서버(${API_BASE_URL})에 연결하지 못했습니다`);
+    throw apiError(`서버(${API_BASE_URL})에 연결하지 못했습니다`);
   }
 
   if (res.status === 401) {
     auth.clear();
-    throw new Error('세션이 만료되었습니다. 다시 로그인해 주세요');
+    throw apiError('세션이 만료되었습니다. 다시 로그인해 주세요', 401);
   }
 
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error ?? '요청을 처리하지 못했습니다');
+  if (!res.ok) throw apiError(data.error ?? '요청을 처리하지 못했습니다', res.status);
   return data;
 }
 

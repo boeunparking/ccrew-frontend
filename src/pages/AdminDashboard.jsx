@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
-import { api } from '../lib/api.js'
+import { Link } from 'react-router-dom'
+import { api, auth } from '../lib/api.js'
+import { useCurrentUser } from '../lib/useCurrentUser.js'
 
 function fmtTime(sec) {
   const m = Math.floor(sec / 60)
@@ -15,6 +17,9 @@ export default function AdminDashboard() {
   const [claims, setClaims] = useState([])
   const [lastUpdated, setLastUpdated] = useState(0)
   const [error, setError] = useState('')
+  // 401(토큰 문제)과 403(권한 없음)은 대응이 전혀 다르므로 상태까지 같이 들고 있는다.
+  const [errorStatus, setErrorStatus] = useState(0)
+  const user = useCurrentUser()
 
   const loadAll = () => {
     Promise.all([
@@ -32,8 +37,12 @@ export default function AdminDashboard() {
         setClaims(c.items)
         setLastUpdated(0)
         setError('')
+        setErrorStatus(0)
       })
-      .catch((e) => setError(e.message))
+      .catch((e) => {
+        setError(e.message)
+        setErrorStatus(e.status ?? 0)
+      })
   }
 
   useEffect(() => {
@@ -76,14 +85,37 @@ export default function AdminDashboard() {
   }
 
   if (error) {
+    // 원인마다 사용자가 해야 할 일이 다르다. 예전에는 셋 다 "관리자 계정으로
+    // 로그인했는지 확인해 주세요"로 뭉뚱그려서, 권한 문제인지 토큰 문제인지
+    // 화면만 보고는 구분할 수 없었다.
+    const loggedIn = auth.isLoggedIn()
+
+    let hint
+    if (!loggedIn) {
+      hint = <>로그인이 풀렸습니다. <Link to="/login" style={{ textDecoration: 'underline' }}>로그인 화면으로</Link></>
+    } else if (errorStatus === 403) {
+      hint = <>이 계정({user?.nickname ?? user?.email ?? '알 수 없음'})에는 관리자 권한이 없습니다. 관리자 계정으로 다시 로그인해 주세요.</>
+    } else if (errorStatus === 401) {
+      // 로그인은 되어 있는데 서버가 토큰을 거부한 경우. 대개 예전에 저장된
+      // 토큰이 남아 있는 것이라 로그아웃 후 다시 로그인하면 풀린다.
+      hint = <>저장된 로그인 정보가 서버에서 거부됐습니다. <Link to="/login" style={{ textDecoration: 'underline' }}>다시 로그인</Link>해 주세요.</>
+    } else {
+      hint = <>잠시 후 다시 시도해 주세요.</>
+    }
+
     return (
       <div className="page-wrap">
         <div className="topbar">
           <div className="logo">CloudDuck <span style={{ fontWeight: 400, fontSize: 11, color: '#8C8C8C' }}>Admin</span></div>
         </div>
-        <p style={{ padding: 24, color: '#c0392b' }}>
-          {error} — 관리자 계정으로 로그인했는지 확인해 주세요.
-        </p>
+        <div style={{ padding: 24 }}>
+          <p style={{ color: '#c0392b', marginBottom: 8 }}>{error}</p>
+          <p style={{ fontSize: 13, color: '#8C8C8C' }}>{hint}</p>
+          <p style={{ fontSize: 11, color: '#B5B5B5', marginTop: 12 }}>
+            상태 {errorStatus || '—'} · 로그인 {loggedIn ? '됨' : '안 됨'}
+            {user?.role ? ` · 권한 ${user.role}` : ''}
+          </p>
+        </div>
       </div>
     )
   }
